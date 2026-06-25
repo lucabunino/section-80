@@ -1,0 +1,14 @@
+@use 'breakpoints.module' as bp;
+
+
+@font-face {
+	font-family: "TimesNow";
+	src: url("../font/TimesNow-SemiLight.otf") format("opentype");
+	font-weight: 300;
+	font-style: normal;
+	font-display: block;
+}
+
+:root {
+	--font-serif: "TimesNow", "Times New Roman", Times, serif;
+}

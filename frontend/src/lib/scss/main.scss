@@ -1,0 +1,27 @@
+@use '$lib/scss/breakpoints.module' as bp;
+
+:root {
+	--white: #ffffff;
+	--black: #000000;
+
+	@for $i from 1 through 200 {
+		--sp-#{$i}: #{calc($i / 13)}rem;
+	}
+}
+
+html:not(.fonts-loaded) {
+	visibility: hidden;
+}
+
+html {
+	-webkit-font-smoothing: antialiased;
+	font-size: 11.85vw;
+	line-height: .77;
+	background-color: var(--white);
+	color: var(--black);
+	font-family: var(--font-serif);
+
+	@media (aspect-ratio < 4/3)	{ font-size: 18vw; }
+	@media (aspect-ratio < 3/4)	{ font-size: 22vw }
+	// @media (aspect-ratio < 1)	{ font-size: 19.5vw; }
+}
