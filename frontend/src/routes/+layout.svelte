@@ -20,6 +20,7 @@
 	<link rel="shortcut icon" href="/favicon.ico" />
 	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 	<meta name="apple-mobile-web-app-title" content="Section80" />
+	<meta name="format-detection" content="address=no, telephone=no, email=no" />
 	<link rel="manifest" href="/site.webmanifest" />
 	<meta name="description" content={description} />
 	<meta property="og:title" content="Section80" />

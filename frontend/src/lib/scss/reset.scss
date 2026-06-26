@@ -25,6 +25,11 @@ input, button, textarea, select {
 }
 address {
 	font-style: inherit;
+	-webkit-text-size-adjust: 100%;
+	font-size: inherit;
+	font-weight: inherit;
+	line-height: inherit;
+	letter-spacing: inherit;
 }
 button {
 	appearance: none;

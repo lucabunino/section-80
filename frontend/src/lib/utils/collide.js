@@ -2,7 +2,7 @@
 const balls = []
 let rafId = null
 
-const SPEED = 1.2
+const SPEED = 1.8
 const SPEED_MAX = SPEED * 8
 const MASK_SIZE = 64
 const SAMPLE_STEP = 3
@@ -167,6 +167,7 @@ export function collide(el) {
 
 	/** @param {PointerEvent} e */
 	function onPointerDown(e) {
+		if (e.pointerType === 'mouse') return
 		dragging = true
 		hasDragged = false
 		ball.paused = true

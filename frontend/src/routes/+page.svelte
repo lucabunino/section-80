@@ -150,7 +150,8 @@
 
 							a {
 								display: block;
-								font-size: 2.9vw;
+								font-size: 2.4vw;
+								padding: 0 .3em;
 								line-height: 1;
 								background-color: var(--black);
 								color: var(--white);
@@ -159,8 +160,8 @@
 								@media (aspect-ratio < 3/4)	{ font-size: 5.4vw; }
 
 								&:hover {
-									color: black;
-									background-color: yellow;
+									color: var(--black);
+									background-color: var(--white);
 								}
 							}
 						}
@@ -191,10 +192,10 @@
 			cursor: pointer;
 
 			img {
-				height: max(140px, min(24vh, 14vw));
+				height: max(140px, min(26vh, 20vw));
 				width: auto;
 
-				@media (aspect-ratio < 3/4) { height: max(100px, min(24vh, 20vw)); }
+				@media (aspect-ratio < 3/4) { height: max(120px, min(26vh, 24vw)); }
 			}
 		}
 
