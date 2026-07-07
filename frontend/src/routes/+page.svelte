@@ -7,11 +7,67 @@
 	import logoBar from '$lib/assets/section-80-bar.svg?url'
 	import videoBar from '$lib/assets/section-80-bar.mp4?url'
 	import posterBar from '$lib/assets/section-80-bar.webp?url'
+	import videoTvMb from '$lib/assets/section-80-mb.mp4?url'
+	import posterTvMb from '$lib/assets/section-80-mb.webp?url'
+	import videoBarMb from '$lib/assets/section-80-bar-mb.mp4?url'
+	import posterBarMb from '$lib/assets/section-80-bar-mb.webp?url'
 
 	let videoTvEl = $state()
+	let videoTvMbEl = $state()
 	let videoBarEl = $state()
+	let videoBarMbEl = $state()
 	let tvActive = $state(false)
 	let barActive = $state(false)
+	let tvTouchOpen = $state(false)
+	let barTouchOpen = $state(false)
+	let tvPaused = $state(false)
+	let barPaused = $state(false)
+
+	/** @param {HTMLVideoElement | undefined} el @param {(v: boolean) => void} setPaused */
+	function tryResume(el, setPaused) {
+		if (!el) return
+		el.play().then(() => setPaused(false)).catch(() => setPaused(true))
+	}
+
+	/** @type {ReturnType<typeof setTimeout> | undefined} */
+	let tvLeaveTimeout
+	/** @type {ReturnType<typeof setTimeout> | undefined} */
+	let barLeaveTimeout
+
+	// Snapshot paused state on pointerdown, not read live in onclick: Safari can
+	// auto-resume a blocked autoplay video as soon as it sees any gesture (mousedown
+	// counts), so by click time tvPaused may have already flipped to false.
+	let tvWasPausedOnPress = false
+	let barWasPausedOnPress = false
+
+	// Alternate option: real native Fullscreen API instead of the fake CSS-overlay
+	// approach below. iOS auto-rotates for free but neither iOS nor Android let us
+	// intercept a tap to close (native chrome swallows it), so this was dropped.
+	//
+	// function enterVideoFullscreen(el) {
+	// 	if (!el) return
+	// 	if (el.requestFullscreen) el.requestFullscreen()
+	// 	else if (el.webkitEnterFullscreen) el.webkitEnterFullscreen()
+	// }
+	//
+	// function exitFullscreenOnTap() {
+	// 	document.exitFullscreen?.()
+	// }
+	//
+	// $effect(() => {
+	// 	function onFullscreenChange() {
+	// 		const el = document.fullscreenElement
+	// 		if (el instanceof HTMLVideoElement) {
+	// 			screen.orientation?.lock?.('landscape').catch(() => {})
+	// 			el.addEventListener('click', exitFullscreenOnTap)
+	// 		} else {
+	// 			videoTvEl?.removeEventListener('click', exitFullscreenOnTap)
+	// 			videoBarEl?.removeEventListener('click', exitFullscreenOnTap)
+	// 		}
+	// 	}
+	// 	document.addEventListener('fullscreenchange', onFullscreenChange)
+	// 	return () => document.removeEventListener('fullscreenchange', onFullscreenChange)
+	// })
 </script>
 
 <main>
@@ -48,42 +104,86 @@
 
 <div class="logo-canvas" aria-hidden="true">
 	<div class="logo" class:active={tvActive} role="presentation" {@attach collide}
-		onpointerenter={(e) => { if (e.pointerType !== 'mouse') return; tvActive = true; if (videoTvEl) videoTvEl.currentTime = 0 }}
-		onpointerleave={(e) => { if (e.pointerType !== 'mouse') return; tvActive = false }}
-		onclick={(e) => { e.stopPropagation(); tvActive = !tvActive; if (tvActive && videoTvEl) videoTvEl.currentTime = 0 }}>
+		onpointerenter={(e) => { if (e.pointerType !== 'mouse') return; clearTimeout(tvLeaveTimeout); tvActive = true; if (videoTvEl) videoTvEl.currentTime = 0; if (videoTvMbEl) videoTvMbEl.currentTime = 0 }}
+		onpointerleave={(e) => { if (e.pointerType !== 'mouse') return; clearTimeout(tvLeaveTimeout); tvLeaveTimeout = setTimeout(() => { tvActive = false }, 50) }}
+		onpointerdown={(e) => { if (e.pointerType !== 'mouse') return; tvWasPausedOnPress = tvPaused }}
+		onclick={(e) => {
+			e.stopPropagation()
+			clearTimeout(tvLeaveTimeout)
+			const pointerType = /** @type {any} */ (e).pointerType
+			if (pointerType === 'touch') { if (videoTvEl) videoTvEl.currentTime = 0; tvPaused = false; videoTvEl?.play(); tvTouchOpen = true; return }
+			if (pointerType === 'pen') {
+				tvPaused = false
+				videoTvEl?.play()
+				videoTvMbEl?.play()
+				tvActive = !tvActive
+				if (tvActive) { if (videoTvEl) videoTvEl.currentTime = 0; if (videoTvMbEl) videoTvMbEl.currentTime = 0 }
+				return
+			}
+			if (tvWasPausedOnPress) { tryResume(videoTvEl, (v) => tvPaused = v); videoTvMbEl?.play() }
+			else tvActive = false
+		}}>
 		<img src={logoTv} alt="Section80" draggable="false" />
 	</div>
 	<div class="logo" class:active={barActive} role="presentation" {@attach collide}
-		onpointerenter={(e) => { if (e.pointerType !== 'mouse') return; barActive = true; if (videoBarEl) videoBarEl.currentTime = 0 }}
-		onpointerleave={(e) => { if (e.pointerType !== 'mouse') return; barActive = false }}
-		onclick={(e) => { e.stopPropagation(); barActive = !barActive; if (barActive && videoBarEl) videoBarEl.currentTime = 0 }}>
+		onpointerenter={(e) => { if (e.pointerType !== 'mouse') return; clearTimeout(barLeaveTimeout); barActive = true; if (videoBarEl) videoBarEl.currentTime = 0; if (videoBarMbEl) videoBarMbEl.currentTime = 0 }}
+		onpointerleave={(e) => { if (e.pointerType !== 'mouse') return; clearTimeout(barLeaveTimeout); barLeaveTimeout = setTimeout(() => { barActive = false }, 50) }}
+		onpointerdown={(e) => { if (e.pointerType !== 'mouse') return; barWasPausedOnPress = barPaused }}
+		onclick={(e) => {
+			e.stopPropagation()
+			clearTimeout(barLeaveTimeout)
+			const pointerType = /** @type {any} */ (e).pointerType
+			if (pointerType === 'touch') { if (videoBarEl) videoBarEl.currentTime = 0; barPaused = false; videoBarEl?.play(); barTouchOpen = true; return }
+			if (pointerType === 'pen') {
+				barPaused = false
+				videoBarEl?.play()
+				videoBarMbEl?.play()
+				barActive = !barActive
+				if (barActive) { if (videoBarEl) videoBarEl.currentTime = 0; if (videoBarMbEl) videoBarMbEl.currentTime = 0 }
+				return
+			}
+			if (barWasPausedOnPress) { tryResume(videoBarEl, (v) => barPaused = v); videoBarMbEl?.play() }
+			else barActive = false
+		}}>
 		<img src={logoBar} alt="Third Place by Section80" draggable="false" />
 	</div>
 </div>
 
 <svelte:window onclick={() => { tvActive = false; barActive = false }} />
 
-<div class="video" aria-hidden="true">
-	<video
-		bind:this={videoTvEl}
-		src={videoTv}
-		poster={posterTv}
-		autoplay
-		muted
-		loop
-		playsinline
-	></video>
+<div class="video-tv" class:touch-fullscreen={tvTouchOpen} aria-hidden="true"
+	onclick={(e) => {
+		if (!tvTouchOpen) return
+		e.stopPropagation()
+		if (tvPaused) { tvPaused = false; videoTvEl?.play(); return }
+		tvTouchOpen = false
+	}}>
+	<video bind:this={videoTvEl} src={videoTv} poster={posterTv} autoplay muted loop playsinline disablePictureInPicture controlsList="nodownload noremoteplayback"
+		onplay={() => { tvPaused = false }}
+		onpause={() => { tryResume(videoTvEl, (v) => tvPaused = v) }}
+		oncanplay={() => { if (videoTvEl?.paused) tryResume(videoTvEl, (v) => tvPaused = v) }}></video>
+	<video bind:this={videoTvMbEl} src={videoTvMb} poster={posterTvMb} autoplay muted loop playsinline class="mb" disablePictureInPicture controlsList="nodownload noremoteplayback"></video>
+	{#if tvPaused}
+		<img src={posterTv} alt="" class="poster-cover" />
+		<span class="click-to-play">Click to play</span>
+	{/if}
 </div>
-<div class="video-bar" aria-hidden="true">
-	<video
-		bind:this={videoBarEl}
-		src={videoBar}
-		poster={posterBar}
-		autoplay
-		muted
-		loop
-		playsinline
-	></video>
+<div class="video-bar" class:touch-fullscreen={barTouchOpen} aria-hidden="true"
+	onclick={(e) => {
+		if (!barTouchOpen) return
+		e.stopPropagation()
+		if (barPaused) { barPaused = false; videoBarEl?.play(); return }
+		barTouchOpen = false
+	}}>
+	<video bind:this={videoBarEl} src={videoBar} poster={posterBar} autoplay muted loop playsinline disablePictureInPicture controlsList="nodownload noremoteplayback"
+		onplay={() => { barPaused = false }}
+		onpause={() => { tryResume(videoBarEl, (v) => barPaused = v) }}
+		oncanplay={() => { if (videoBarEl?.paused) tryResume(videoBarEl, (v) => barPaused = v) }}></video>
+	<video bind:this={videoBarMbEl} src={videoBarMb} poster={posterBarMb} autoplay muted loop playsinline class="mb" disablePictureInPicture controlsList="nodownload noremoteplayback"></video>
+	{#if barPaused}
+		<img src={posterBar} alt="" class="poster-cover" />
+		<span class="click-to-play">Click to play</span>
+	{/if}
 </div>
 
 <style lang="scss">
@@ -199,13 +299,13 @@
 			}
 		}
 
-		&:has(.logo:first-child.active) ~ .video,
+		&:has(.logo:first-child.active) ~ .video-tv,
 		&:has(.logo:last-child.active) ~ .video-bar {
 			opacity: 1;
 		}
 	}
 
-	.video,
+	.video-tv,
 	.video-bar {
 		position: fixed;
 		inset: 0;
@@ -217,6 +317,61 @@
 			width: 100%;
 			height: 100%;
 			object-fit: cover;
+
+			&::-webkit-media-controls-start-playback-button {
+				display: none !important;
+				-webkit-appearance: none;
+			}
+		}
+
+		.poster-cover {
+			position: absolute;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			pointer-events: none;
+			z-index: 1;
+		}
+
+		.click-to-play {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			color: var(--white);
+			pointer-events: none;
+			z-index: 2;
+			font-size: .2rem;
+		}
+
+		video.mb { display: none; }
+		@media (aspect-ratio < 1) {
+			video:not(.mb) { display: none; }
+			video.mb { display: block; }
+		}
+
+		&.touch-fullscreen {
+			z-index: 10;
+			opacity: 1;
+			pointer-events: auto;
+			background: var(--black);
+
+			video.mb { display: none; }
+			video:not(.mb) {
+				display: block;
+				@media (aspect-ratio < 1) {
+					position: absolute;
+					top: 50%;
+					left: 50%;
+					width: 100dvh;
+					height: 100dvw;
+					max-width: unset;
+					max-height: unset;
+					transform: translate(-50%, -50%) rotate(90deg);
+				}
+			}
 		}
 	}
+
 </style>

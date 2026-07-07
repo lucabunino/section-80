@@ -2,7 +2,7 @@
 const balls = []
 let rafId = null
 
-const SPEED = 1.8
+const SPEED = 2.4
 const SPEED_MAX = SPEED * 8
 const MASK_SIZE = 64
 const SAMPLE_STEP = 3
@@ -88,7 +88,17 @@ function tick() {
 		for (let j = i + 1; j < balls.length; j++) {
 			const a = balls[i]
 			const b = balls[j]
-			if (pixelsOverlap(a, b)) {
+			if (!pixelsOverlap(a, b)) continue
+			if (a.paused || b.paused) {
+				const dragged = a.paused ? a : b
+				const free = a.paused ? b : a
+				const dx = (free.x + free.w / 2) - (dragged.x + dragged.w / 2)
+				const dy = (free.y + free.h / 2) - (dragged.y + dragged.h / 2)
+				const dist = Math.sqrt(dx * dx + dy * dy) || 1
+				const impulse = SPEED * 4
+				free.vx = (dx / dist) * impulse
+				free.vy = (dy / dist) * impulse
+			} else {
 				const tmpVx = a.vx; const tmpVy = a.vy
 				a.vx = b.vx; a.vy = b.vy
 				b.vx = tmpVx; b.vy = tmpVy
